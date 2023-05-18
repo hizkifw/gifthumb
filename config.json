@@ -1,0 +1,9 @@
+{
+    "NSnapshots": 3,
+    "ThumbHeight": 360,
+    "GifFramerate": 1,
+    "CacheDir": "/tmp/cache/gifthumb",
+    "AllowedHosts": [
+        "localhost"
+    ]
+}
