@@ -1,0 +1,31 @@
+name: Build and Push Docker Image
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and tag Docker image
+        run: |
+          IMAGE_TAG=$(git rev-parse --short=7 HEAD)
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          DOCKER_REPO=ghcr.io/${{ github.repository }}
+
+          # Tag the image with commit hash and branch name
+          docker buildx build \
+            --file Dockerfile \
+            --tag $DOCKER_REPO:${IMAGE_TAG} \
+            --tag $DOCKER_REPO:${BRANCH_NAME} \
+            --tag $DOCKER_REPO:latest \
+            --push \
+            .
