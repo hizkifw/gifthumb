@@ -2,6 +2,7 @@
     "NSnapshots": 3,
     "ThumbHeight": 360,
     "GifFramerate": 1,
+    "MaxProcesses": 4,
     "CacheDir": "/tmp/cache/gifthumb",
     "AllowedHosts": [
         "localhost"

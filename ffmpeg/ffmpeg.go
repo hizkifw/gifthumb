@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/hizkifw/gifthumb/config"
+	"golang.org/x/sync/semaphore"
 )
 
 type Ffmpeg struct {
@@ -21,14 +22,24 @@ type Ffmpeg struct {
 	// Create a map to keep track of which videos are being processed
 	processing     map[string]struct{}
 	processingLock sync.Mutex
+
+	// Limit the number of concurrent processes
+	processingSem *semaphore.Weighted
 }
 
 func New(cfg *config.Config) *Ffmpeg {
-	return &Ffmpeg{cfg: cfg, processing: make(map[string]struct{})}
+	return &Ffmpeg{
+		cfg:           cfg,
+		processing:    make(map[string]struct{}),
+		processingSem: semaphore.NewWeighted(int64(cfg.MaxProcesses)),
+	}
 }
 
 // Get the duration of a video from a URL
 func (f *Ffmpeg) getVideoDuration(ctx context.Context, url string) (float64, error) {
+	f.processingSem.Acquire(ctx, 1)
+	defer f.processingSem.Release(1)
+
 	cmd := exec.CommandContext(
 		ctx,
 		"ffprobe", "-v", "error",
@@ -51,6 +62,9 @@ func (f *Ffmpeg) getVideoDuration(ctx context.Context, url string) (float64, err
 
 // Get a snapshot of a video at a given timestamp
 func (f *Ffmpeg) getSnapshotAt(ctx context.Context, url string, timestamp float64, outfile string) error {
+	f.processingSem.Acquire(ctx, 1)
+	defer f.processingSem.Release(1)
+
 	cmd := exec.CommandContext(
 		ctx,
 		"ffmpeg", "-y",
@@ -70,6 +84,9 @@ func (f *Ffmpeg) getSnapshotAt(ctx context.Context, url string, timestamp float6
 }
 
 func (f *Ffmpeg) makeGif(ctx context.Context, pattern string, outfile string) error {
+	f.processingSem.Acquire(ctx, 1)
+	defer f.processingSem.Release(1)
+
 	// Create the gif
 	cmd := exec.CommandContext(
 		ctx,

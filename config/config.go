@@ -14,6 +14,8 @@ type Config struct {
 	ThumbHeight int
 	// Framerate of the gif
 	GifFramerate int
+	// Maximum number of concurrent processes
+	MaxProcesses int
 	// Path to the cache directory
 	CacheDir string
 	// List of allowed hosts for the URL
